@@ -8,12 +8,21 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,6 +31,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -73,6 +84,9 @@ public class LocationService extends Service implements LocationListener{
     }
 
     public void sendMessage(final JSONObject msg){
+
+        new SendNetwork().execute(msg.toString());
+        /*
         Runnable runble=new Runnable() {
             @Override
             public void run() {
@@ -81,7 +95,7 @@ public class LocationService extends Service implements LocationListener{
         };
 
         Thread thread=new Thread(runble);
-        thread.start();
+        thread.start();*/
 
     }
 
@@ -144,5 +158,33 @@ public class LocationService extends Service implements LocationListener{
     public long getSystemtime(){
         return System.currentTimeMillis();
     }
+
+    public void postData(String json) {
+
+        HttpClient httpclient = new DefaultHttpClient();
+        HttpPost httppost = new HttpPost("http://138.197.30.34:5003");
+
+        try {
+            // Add your data
+            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+            nameValuePairs.add(new BasicNameValuePair("data", json));
+            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+            HttpResponse response = httpclient.execute(httppost);
+        } catch (ClientProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    class SendNetwork extends AsyncTask<String,String,String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            postData(params[0]);
+            return null;
+        }
+    }
+
 
 }
